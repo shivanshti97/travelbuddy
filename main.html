@@ -32,8 +32,17 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--text);}
 .inputRow{display:flex;gap:8px;margin-top:10px}
 .inputRow input{flex:1;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:inherit}
 .btn{padding:10px 12px;border-radius:8px;border:0;background:var(--accent);color:#042026;cursor:pointer;font-weight:600}
+.btn:focus-visible, .save-btn:focus-visible, .quick button:focus-visible, .inputRow input:focus-visible{outline:2px solid var(--accent-2);outline-offset:2px}
 .quick{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
 .quick button{background:transparent;border:1px dashed rgba(255,255,255,0.05);padding:6px 10px;border-radius:8px;color:var(--muted);cursor:pointer}
+.faq{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.faq-title{font-size:13px;color:var(--muted)}
+.faq-chips{display:flex;gap:8px;flex-wrap:wrap}
+.faq-chips button{background:transparent;border:1px solid rgba(255,255,255,0.05);padding:6px 10px;border-radius:999px;color:var(--muted);cursor:pointer}
+.picker{display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap}
+.picker select,.picker input{padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:inherit}
+.toast-wrap{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{background:rgba(255,255,255,0.1);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,0.15);color:var(--text);padding:10px 12px;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.25)}
 .itinerary{display:flex;flex-direction:column;height:78vh;padding:10px;gap:12px}
 .controls{display:flex;justify-content:space-between;align-items:center}
 .itins{flex:1;overflow:auto;display:flex;flex-direction:column;gap:12px;padding-top:6px}
@@ -62,6 +71,22 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--text);}
       <button data-msg="Plan 1 day in Paris">1-day Paris</button>
       <button data-msg="Plan 2 days in Tokyo">2-day Tokyo</button>
       <button data-msg="Show popular countries">Popular countries</button>
+    </div>
+    <div class="faq" aria-label="Traveler FAQs">
+      <div class="faq-title">Traveler FAQs</div>
+      <div class="faq-chips">
+        <button data-faq="how to find cheap flights">Cheap flights</button>
+        <button data-faq="do i need travel insurance">Travel insurance</button>
+        <button data-faq="how to avoid jet lag">Avoid jet lag</button>
+        <button data-faq="best time to visit paris">Best time to visit Paris</button>
+        <button data-faq="what to pack for beach">Beach packing list</button>
+      </div>
+    </div>
+    <div class="picker" aria-label="Select a destination and plan">
+      <select id="destSelect" aria-label="Destination"></select>
+      <input id="daysInput" type="number" min="1" max="3" value="2" aria-label="Days" />
+      <button id="planSelectBtn" class="btn" type="button">Plan</button>
+      <button id="showSelectBtn" class="save-btn" type="button">Show places</button>
     </div>
     <div class="small">Local demo — data stored in your browser</div>
   </div>
@@ -297,33 +322,140 @@ const DESTS = {
   }
 };
 
+// Simple FAQ bank
+const FAQ = {
+  "how to find cheap flights": "Use flexible dates, set price alerts (Google Flights/Skyscanner), and book 2–3 months ahead for international trips.",
+  "do i need travel insurance": "Travel insurance is recommended — it can cover cancellations, medical emergencies, and lost baggage.",
+  "how to avoid jet lag": "Shift your sleep schedule before departure, hydrate, get sunlight on arrival, and use short naps if needed.",
+  "best time to visit paris": "Spring (Apr–Jun) and fall (Sep–Oct) have pleasant weather and fewer crowds than summer.",
+  "what to pack for beach": "Light clothes, swimwear, sunblock, hat, sunglasses, flip-flops, and a lightweight cover-up."
+};
+
 const messages=document.getElementById('messages');
-function postMessage(t,from='bot'){const e=document.createElement('div');e.className='bubble '+(from==='user'?'user':'bot');e.innerHTML=t+`<div class='meta'>${new Date().toLocaleTimeString()}</div>`;messages.appendChild(e);messages.scrollTop=messages.scrollHeight;}
-function findKey(loc){loc=loc.toLowerCase().replace(/\s+/g,'');return Object.keys(DESTS).find(k=>k.includes(loc));}
+const toastWrap=document.createElement('div');toastWrap.className='toast-wrap';document.body.appendChild(toastWrap);
+function showAlert(msg){const t=document.createElement('div');t.className='toast';t.textContent=String(msg);toastWrap.appendChild(t);setTimeout(()=>{t.remove();},3000);}
+function formatTitle(s){return String(s).replace(/[_-]+/g,' ').replace(/([a-z])([A-Z])/g,'$1 $2').replace(/^\w/,c=>c.toUpperCase());}
+function setTextWithBreaks(el,text){const parts=String(text).split('\n');parts.forEach((p,i)=>{el.appendChild(document.createTextNode(p));if(i<parts.length-1){el.appendChild(document.createElement('br'));}});}
+function postMessage(t,from='bot'){
+  const e=document.createElement('div');
+  e.className='bubble '+(from==='user'?'user':'bot');
+  const span=document.createElement('span');
+  setTextWithBreaks(span,t);
+  e.appendChild(span);
+  const meta=document.createElement('div');
+  meta.className='meta';
+  meta.textContent=new Date().toLocaleTimeString();
+  e.appendChild(meta);
+  messages.appendChild(e);
+  messages.scrollTop=messages.scrollHeight;
+}
+function findKey(loc){
+  const s=String(loc).toLowerCase().replace(/[\s\-]+/g,'');
+  return Object.keys(DESTS).find(k=>k.toLowerCase().replace(/\s+/g,'')===s || k.toLowerCase().includes(s));
+}
 function genPlan(k,d){const data=DESTS[k];const arr=[];const per=Math.ceil(data.places.length/d);for(let i=0;i<d;i++){arr.push(data.places.slice(i*per,(i+1)*per));}return{city:k,days:arr,desc:data.desc};}
-function renderItin(plan){const wrap=document.getElementById('itins');wrap.innerHTML='';plan.days.forEach((stops,i)=>{const d=document.createElement('div');d.className='dayCard';d.innerHTML=`<strong>Day ${i+1}</strong><br>${stops.join(', ')}`;wrap.appendChild(d);});window.currentItin=plan;}
+function renderItin(plan){
+  const wrap=document.getElementById('itins');
+  wrap.innerHTML='';
+  const frag=document.createDocumentFragment();
+  plan.days.forEach((stops,i)=>{
+    const d=document.createElement('div');
+    d.className='dayCard';
+    const s=document.createElement('strong');
+    s.textContent=`Day ${i+1}`;
+    d.appendChild(s);
+    if(!stops||stops.length===0){
+      const em=document.createElement('div');
+      em.className='small';
+      em.textContent='No activities scheduled.';
+      d.appendChild(em);
+    }else{
+      const list=document.createElement('div');
+      list.className='small';
+      list.textContent=stops.join(', ');
+      d.appendChild(list);
+    }
+    frag.appendChild(d);
+  });
+  wrap.appendChild(frag);
+  window.currentItin=plan;
+}
 function parseInput(txt){
-  postMessage(txt,'user');
-  const m=txt.toLowerCase().match(/plan\s+(\d+)\s*days?\s*(?:in)?\s*([a-zA-Z\s]+)/);
-  if(m){const d=parseInt(m[1]);if(d>3)return postMessage("Max 3 days supported.");
-    const key=findKey(m[2]);if(!key)return postMessage("Unknown city. Try Paris or Tokyo.");
-    const plan=genPlan(key,d);renderItin(plan);return postMessage(`Here’s a ${d}-day plan for ${key.toUpperCase()}!`);}
-  if(txt.toLowerCase().includes('popular'))return postMessage("Popular: Paris, Tokyo, Bali, London");
+  const val=String(txt||'').trim();
+  if(!val) return;
+  postMessage(val,'user');
+  const lower=val.toLowerCase();
+  if(/^(help|hi|hello|hey)\b/.test(lower)){
+    postMessage("Hi! Try: Plan 2 days in Paris • Show popular countries • Cheap flights");
+    return;
+  }
+  // FAQ lookup
+  for(const q in FAQ){ if(lower.includes(q)){ postMessage(FAQ[q]); return; } }
+  const m=val.toLowerCase().match(/plan\s+(\d+)\s*days?\s*(?:in|to)?\s*([a-z0-9_\-\s]+)/);
+  if(m){
+    const d=parseInt(m[1],10);
+    if(d>3){postMessage("Max 3 days supported (try 1–3).");return;}
+    const key=findKey(m[2]);
+    if(!key){
+      showAlert('Sorry, I do not have data for that location yet. Try Paris, Tokyo, Bali or London.');
+      postMessage("Unknown city. Try Paris, Tokyo, Bali or London.");
+      return;
+    }
+    const plan=genPlan(key,d);
+    renderItin(plan);
+    postMessage(`Here’s a ${d}-day plan for ${key.toUpperCase()}!`);
+    return;
+  }
+  if(lower.includes('popular')){postMessage("Popular: Paris, Tokyo, Bali, London");return;}
+  showAlert('Sorry, I could not understand that. Try the suggested commands.');
   postMessage("Try commands like 'Plan 2 days in Paris'");
 }
-document.getElementById('sendBtn').onclick=()=>parseInput(document.getElementById('userInput').value);
+document.getElementById('sendBtn').onclick=()=>{const v=document.getElementById('userInput').value;parseInput(v);document.getElementById('userInput').value='';};
+document.getElementById('userInput').addEventListener('keydown',(e)=>{if(e.key==='Enter'){e.preventDefault();document.getElementById('sendBtn').click();}});
 document.querySelectorAll('.quick button').forEach(b=>b.onclick=()=>parseInput(b.dataset.msg));
-document.getElementById('themeBtn').onclick=()=>document.body.classList.toggle('light');
+document.querySelectorAll('.faq-chips button').forEach(b=>b.onclick=()=>parseInput(b.getAttribute('data-faq')));
+// theme persistence
+const themeBtn=document.getElementById('themeBtn');
+const savedTheme=localStorage.getItem('tb_theme');
+if(savedTheme==='light'){document.body.classList.add('light');themeBtn.textContent='☀️';}
+themeBtn.onclick=()=>{document.body.classList.toggle('light');const light=document.body.classList.contains('light');themeBtn.textContent=light?'☀️':'🌙';localStorage.setItem('tb_theme',light?'light':'dark');};
 document.getElementById('saveItin').onclick=()=>{
   if(window.currentItin){localStorage.setItem('travelbuddy',JSON.stringify(window.currentItin));postMessage("Itinerary saved.");}
   else postMessage("No itinerary to save.");
 };
 document.getElementById('exportICal').onclick=()=>{
-  if(!window.currentItin)return postMessage("No itinerary to export.");
-  const text="BEGIN:VCALENDAR\nVERSION:2.0\n"+window.currentItin.days.map((stops,i)=>`BEGIN:VEVENT\nSUMMARY:Day ${i+1} - ${stops.join(', ')}\nEND:VEVENT`).join('\n')+"\nEND:VCALENDAR";
+  if(!window.currentItin){postMessage("No itinerary to export.");return;}
+  const stamp=new Date().toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
+  let text='BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//TravelBuddy//EN\n';
+  window.currentItin.days.forEach((stops,i)=>{
+    const summary=`Day ${i+1}`;
+    text+=`BEGIN:VEVENT\nUID:day-${i+1}@travelbuddy.local\nDTSTAMP:${stamp}\nSUMMARY:${summary} - ${stops.join(' / ')}\nEND:VEVENT\n`;
+  });
+  text+='END:VCALENDAR';
   const blob=new Blob([text],{type:'text/calendar'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='itinerary.ics';a.click();postMessage("ICS file exported.");
 };
+
+// Populate destination select and wire actions
+(function initPicker(){
+  const sel=document.getElementById('destSelect');
+  if(!sel) return;
+  const keys=Object.keys(DESTS);
+  const opts=keys.map(k=>({k,label:formatTitle(k)})).sort((a,b)=>a.label.localeCompare(b.label));
+  sel.innerHTML='';
+  opts.forEach(o=>{const opt=document.createElement('option');opt.value=o.k;opt.textContent=o.label;sel.appendChild(opt);});
+  const planBtn=document.getElementById('planSelectBtn');
+  const showBtn=document.getElementById('showSelectBtn');
+  const daysInput=document.getElementById('daysInput');
+  planBtn.onclick=()=>{
+    const key=sel.value;const days=Math.max(1,Math.min(3,parseInt(daysInput.value||'2',10)));
+    const plan=genPlan(key,days);renderItin(plan);postMessage(`Created a ${days}-day draft for ${formatTitle(key)}.`);
+  };
+  showBtn.onclick=()=>{
+    const key=sel.value;const d=DESTS[key];
+    postMessage(`${d.desc}\nTop places: ${d.places.join(', ')}`);
+  };
+})();
 </script>
 </body>
 </html>
