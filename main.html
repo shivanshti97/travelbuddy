@@ -82,12 +82,221 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--text);}
 </div>
 
 <script>
-const DESTS={
-  paris:{desc:"Paris — art, history, romance.",places:["Eiffel Tower","Louvre Museum","Notre-Dame","Montmartre","Seine Cruise"]},
-  tokyo:{desc:"Tokyo — neon & temples.",places:["Shibuya Crossing","Senso-ji","Tokyo Tower","Asakusa","Ueno Park"]},
-  bali:{desc:"Bali — beaches & rice terraces.",places:["Ubud","Uluwatu Temple","Kuta Beach","Tegallalang","Nusa Penida"]},
-  london:{desc:"London — history & cosmopolitan life.",places:["Buckingham Palace","British Museum","Tower Bridge","London Eye","Covent Garden"]}
+const DESTS = {
+  paris: {
+    desc: "Paris — art, history, romance.",
+    places: ["Eiffel Tower", "Louvre Museum", "Notre-Dame", "Montmartre", "Seine Cruise"]
+  },
+  tokyo: {
+    desc: "Tokyo — neon lights & ancient temples.",
+    places: ["Shibuya Crossing", "Senso-ji Temple", "Tokyo Tower", "Akihabara", "Ueno Park"]
+  },
+  bali: {
+    desc: "Bali — beaches, rice terraces & temples.",
+    places: ["Ubud", "Uluwatu Temple", "Kuta Beach", "Tegallalang", "Nusa Penida"]
+  },
+  london: {
+    desc: "London — royal heritage & modern culture.",
+    places: ["Buckingham Palace", "British Museum", "Tower Bridge", "London Eye", "Hyde Park"]
+  },
+  newyork: {
+    desc: "New York — the city that never sleeps.",
+    places: ["Times Square", "Central Park", "Statue of Liberty", "Empire State Building", "Brooklyn Bridge"]
+  },
+  rome: {
+    desc: "Rome — ancient ruins and divine cuisine.",
+    places: ["Colosseum", "Vatican City", "Trevi Fountain", "Pantheon", "Roman Forum"]
+  },
+  dubai: {
+    desc: "Dubai — luxury, innovation & desert charm.",
+    places: ["Burj Khalifa", "Palm Jumeirah", "Dubai Mall", "Desert Safari", "Dubai Fountain"]
+  },
+  singapore: {
+    desc: "Singapore — futuristic city with nature blends.",
+    places: ["Marina Bay Sands", "Gardens by the Bay", "Sentosa Island", "Chinatown", "Merlion Park"]
+  },
+  sydney: {
+    desc: "Sydney — stunning harbor & sunny beaches.",
+    places: ["Sydney Opera House", "Harbour Bridge", "Bondi Beach", "Darling Harbour", "The Rocks"]
+  },
+  barcelona: {
+    desc: "Barcelona — art, architecture & Mediterranean vibes.",
+    places: ["Sagrada Familia", "Park Güell", "La Rambla", "Casa Batlló", "Gothic Quarter"]
+  },
+  venice: {
+    desc: "Venice — canals, romance & gondolas.",
+    places: ["Grand Canal", "St. Mark’s Basilica", "Rialto Bridge", "Doge’s Palace", "Murano Island"]
+  },
+  hongkong: {
+    desc: "Hong Kong — skyline views & street food.",
+    places: ["Victoria Peak", "Disneyland", "Tsim Sha Tsui", "Temple Street Market", "Lantau Island"]
+  },
+  bangkok: {
+    desc: "Bangkok — temples, nightlife & street eats.",
+    places: ["Grand Palace", "Wat Arun", "Chatuchak Market", "Khao San Road", "Floating Market"]
+  },
+  kualaLumpur: {
+    desc: "Kuala Lumpur — cultural mix & modern skyline.",
+    places: ["Petronas Towers", "Batu Caves", "Bukit Bintang", "KL Tower", "Central Market"]
+  },
+  istanbul: {
+    desc: "Istanbul — where East meets West.",
+    places: ["Hagia Sophia", "Blue Mosque", "Topkapi Palace", "Grand Bazaar", "Bosphorus Cruise"]
+  },
+  cairo: {
+    desc: "Cairo — ancient pyramids & Nile beauty.",
+    places: ["Giza Pyramids", "Sphinx", "Egyptian Museum", "Khan el-Khalili", "Nile Cruise"]
+  },
+  athens: {
+    desc: "Athens — birthplace of democracy.",
+    places: ["Acropolis", "Parthenon", "Plaka", "Temple of Zeus", "Syntagma Square"]
+  },
+  seoul: {
+    desc: "Seoul — K-culture, fashion & temples.",
+    places: ["Gyeongbokgung Palace", "Myeongdong", "Bukchon Hanok Village", "N Seoul Tower", "Hongdae"]
+  },
+  amsterdam: {
+    desc: "Amsterdam — canals, bikes & museums.",
+    places: ["Rijksmuseum", "Anne Frank House", "Van Gogh Museum", "Dam Square", "Vondelpark"]
+  },
+  prague: {
+    desc: "Prague — fairytale charm & medieval streets.",
+    places: ["Charles Bridge", "Prague Castle", "Old Town Square", "Astronomical Clock", "Petrin Hill"]
+  },
+  zurich: {
+    desc: "Zurich — Swiss luxury & mountain views.",
+    places: ["Lake Zurich", "Bahnhofstrasse", "Old Town", "Uetliberg", "Swiss National Museum"]
+  },
+  berlin: {
+    desc: "Berlin — history, art & nightlife.",
+    places: ["Brandenburg Gate", "Berlin Wall", "Museum Island", "Checkpoint Charlie", "Alexanderplatz"]
+  },
+  vienna: {
+    desc: "Vienna — classical music & imperial palaces.",
+    places: ["Schonbrunn Palace", "St. Stephen’s Cathedral", "Belvedere", "Opera House", "Prater Park"]
+  },
+  madrid: {
+    desc: "Madrid — Spanish art, parks & tapas.",
+    places: ["Royal Palace", "Prado Museum", "Retiro Park", "Gran Via", "Plaza Mayor"]
+  },
+  lisbon: {
+    desc: "Lisbon — pastel hills & ocean breezes.",
+    places: ["Belem Tower", "Jerónimos Monastery", "Alfama", "Tram 28", "LX Factory"]
+  },
+  moscow: {
+    desc: "Moscow — history, power & grandeur.",
+    places: ["Red Square", "Kremlin", "St. Basil’s Cathedral", "Bolshoi Theatre", "Gorky Park"]
+  },
+  losangeles: {
+    desc: "Los Angeles — beaches, film & fame.",
+    places: ["Hollywood Sign", "Santa Monica Pier", "Venice Beach", "Universal Studios", "Getty Center"]
+  },
+  sanfrancisco: {
+    desc: "San Francisco — hills, bridges & culture.",
+    places: ["Golden Gate Bridge", "Alcatraz", "Pier 39", "Chinatown", "Lombard Street"]
+  },
+  toronto: {
+    desc: "Toronto — multicultural city of Canada.",
+    places: ["CN Tower", "Royal Ontario Museum", "Niagara Falls (day trip)", "Distillery District", "Toronto Islands"]
+  },
+  vancouver: {
+    desc: "Vancouver — mountains meet the sea.",
+    places: ["Stanley Park", "Capilano Bridge", "Granville Island", "Grouse Mountain", "Gastown"]
+  },
+  dubrovnik: {
+    desc: "Dubrovnik — the Pearl of the Adriatic.",
+    places: ["Old Town Walls", "Lovrijenac Fortress", "Stradun", "Lokrum Island", "Banje Beach"]
+  },
+  marrakech: {
+    desc: "Marrakech — colors, markets & palaces.",
+    places: ["Jemaa el-Fnaa", "Majorelle Garden", "Bahia Palace", "Koutoubia Mosque", "Medina"]
+  },
+  reykjavik: {
+    desc: "Reykjavik — gateway to Icelandic nature.",
+    places: ["Blue Lagoon", "Golden Circle", "Hallgrimskirkja", "Whale Watching", "Harpa Center"]
+  },
+  edinburgh: {
+    desc: "Edinburgh — castles & cobblestone charm.",
+    places: ["Edinburgh Castle", "Royal Mile", "Arthur’s Seat", "Holyrood Palace", "Calton Hill"]
+  },
+  oslo: {
+    desc: "Oslo — fjords & modern design.",
+    places: ["Vigeland Park", "Oslo Opera House", "Akershus Fortress", "Fjord Cruise", "Karl Johans Gate"]
+  },
+  stockholm: {
+    desc: "Stockholm — islands, innovation & history.",
+    places: ["Gamla Stan", "Vasa Museum", "Royal Palace", "Skansen", "ABBA Museum"]
+  },
+  beijing: {
+    desc: "Beijing — imperial palaces & the Great Wall.",
+    places: ["Great Wall", "Forbidden City", "Tiananmen Square", "Summer Palace", "Temple of Heaven"]
+  },
+  shanghai: {
+    desc: "Shanghai — skyline, shopping & culture.",
+    places: ["The Bund", "Yu Garden", "Oriental Pearl Tower", "Nanjing Road", "Zhujiajiao Water Town"]
+  },
+  delhi: {
+    desc: "Delhi — monuments & street markets.",
+    places: ["Red Fort", "India Gate", "Qutub Minar", "Lotus Temple", "Humayun’s Tomb"]
+  },
+  jaipur: {
+    desc: "Jaipur — pink city of forts & bazaars.",
+    places: ["Amber Fort", "Hawa Mahal", "City Palace", "Jantar Mantar", "Nahargarh Fort"]
+  },
+  mumbai: {
+    desc: "Mumbai — city of dreams & sea views.",
+    places: ["Gateway of India", "Marine Drive", "Elephanta Caves", "Juhu Beach", "Colaba Causeway"]
+  },
+  kathmandu: {
+    desc: "Kathmandu — temples, trekking & heritage.",
+    places: ["Swayambhunath", "Pashupatinath", "Durbar Square", "Thamel", "Boudhanath Stupa"]
+  },
+  bangalore: {
+    desc: "Bangalore — gardens & technology.",
+    places: ["Lalbagh", "Cubbon Park", "Vidhana Soudha", "ISKCON Temple", "MG Road"]
+  },
+  cancun: {
+    desc: "Cancun — turquoise waters & Mayan ruins.",
+    places: ["Chichen Itza", "Isla Mujeres", "Tulum", "Xcaret Park", "Playa Delfines"]
+  },
+  miami: {
+    desc: "Miami — beaches & nightlife.",
+    places: ["South Beach", "Ocean Drive", "Little Havana", "Vizcaya Museum", "Wynwood Walls"]
+  },
+  capeTown: {
+    desc: "Cape Town — mountains, beaches & vineyards.",
+    places: ["Table Mountain", "Robben Island", "Cape Point", "Boulders Beach", "V&A Waterfront"]
+  },
+  buenosAires: {
+    desc: "Buenos Aires — tango, steak & passion.",
+    places: ["La Boca", "Recoleta", "Teatro Colon", "San Telmo", "Palermo"]
+  },
+  santiago: {
+    desc: "Santiago — mountains & culture.",
+    places: ["Cerro San Cristobal", "Plaza de Armas", "La Chascona", "Bellavista", "Sky Costanera"]
+  },
+  auckland: {
+    desc: "Auckland — harbors & adventures.",
+    places: ["Sky Tower", "Waiheke Island", "Mount Eden", "Auckland Museum", "Rangitoto Island"]
+  },
+  honolulu: {
+    desc: "Honolulu — surf, sun & aloha spirit.",
+    places: ["Waikiki Beach", "Diamond Head", "Pearl Harbor", "Hanauma Bay", "Iolani Palace"]
+  },
+  doha: {
+    desc: "Doha — desert luxury & modern design.",
+    places: ["Museum of Islamic Art", "Souq Waqif", "The Pearl", "Katara Village", "Corniche"]
+  },
+  dubrovnik: {
+    desc: "Dubrovnik — medieval walls & blue seas.",
+    places: ["Old Town", "City Walls", "Stradun", "Lovrijenac", "Lokrum Island"]
+  },
+  lisbon: {
+    desc: "Lisbon — hills, trams & coastal views.",
+    places: ["Belem Tower", "Alfama", "LX Factory", "Jerónimos Monastery", "Tram 28"]
+  }
 };
+
 const messages=document.getElementById('messages');
 function postMessage(t,from='bot'){const e=document.createElement('div');e.className='bubble '+(from==='user'?'user':'bot');e.innerHTML=t+`<div class='meta'>${new Date().toLocaleTimeString()}</div>`;messages.appendChild(e);messages.scrollTop=messages.scrollHeight;}
 function findKey(loc){loc=loc.toLowerCase().replace(/\s+/g,'');return Object.keys(DESTS).find(k=>k.includes(loc));}
